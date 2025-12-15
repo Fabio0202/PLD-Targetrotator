@@ -193,7 +193,7 @@ namespace manageLaser
   void firePulse() 
   {
     digitalWrite(LASER_PIN, HIGH);
-    delayMicroseconds(pulsePeriod *1000); // hier später anpassen (*1000 nur zum vorzeigen)
+    delayMicroseconds(pulsePeriod); // hier später anpassen (*1000 nur zum vorzeigen)
     digitalWrite(LASER_PIN, LOW);
     delay(100); // Kurze Pause nach dem Puls
   }
