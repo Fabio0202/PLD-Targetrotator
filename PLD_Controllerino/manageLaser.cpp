@@ -10,7 +10,7 @@ namespace manageLaser
   unsigned long totalPulses = 0;
   unsigned long lastFired = 0;
   unsigned long pulseInterval = 10000; // Zeit zwischen Pulsen in ms (Default auf 0.1 Hz)
-  unsigned long pulseDuration = 1000;    // Dauer eines einzelnen Pulses in µs (Default auf 1 ms)
+  unsigned long pulseDuration = 100;    // Dauer eines einzelnen Pulses in µs (Default auf 1 ms)
   bool sequenceCompleted = false;
   
   void setup() 
