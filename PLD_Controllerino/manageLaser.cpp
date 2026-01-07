@@ -9,7 +9,8 @@ namespace manageLaser
   unsigned long firedPulses = 0;
   unsigned long totalPulses = 0;
   unsigned long lastFired = 0;
-  unsigned long pulsePeriod = 10000; // Standard: 0.1 Hz
+  unsigned long pulseInterval = 10000; // Zeit zwischen Pulsen in ms (Default auf 0.1 Hz)
+  unsigned long pulseDuration = 1000;    // Dauer eines einzelnen Pulses in µs (Default auf 1 ms)
   bool sequenceCompleted = false;
   
   void setup() 
@@ -33,7 +34,7 @@ namespace manageLaser
   void firePulsesMissing()
   {
     // 🔥 PULS-LOGIK: Wenn Laser aktiv UND Zeit abgelaufen UND noch nicht fertig
-    if(laserOn && (millis() - lastFired) > pulsePeriod && firedPulses < totalPulses)
+    if(laserOn && (millis() - lastFired) > pulseInterval && firedPulses < totalPulses)
     {
       firePulse();
       lastFired = millis();
@@ -80,7 +81,10 @@ namespace manageLaser
       {
         unsigned long pulses = command.substring(pIndex + 1, fIndex).toInt();
         double frequency = command.substring(fIndex + 1).toFloat();
-        
+        if (frequency > 500.0)
+          {
+          Serial.println("⚠️  Warnung: Frequenz > 500Hz mit 1ms Pulsdauer problematisch!");
+          }
         startLaserSequence(pulses, frequency);
       } 
       else 
@@ -131,9 +135,14 @@ namespace manageLaser
     }
     
     totalPulses = pulses;
-    pulsePeriod = (unsigned long)(1000.0 / frequency); // ms zwischen Pulsen
+    pulseInterval = (unsigned long)(1000.0 / frequency); // ms zwischen Pulsen
     firedPulses = 0;
     sequenceCompleted =false;
+
+    if (pulseInterval * 1000 < pulseDuration) {
+      Serial.println("❌ Fehler: Frequenz zu hoch für die Pulsdauer!");
+      return;
+    }
     
     Serial.print("🚀 Starte Laser Sequence: ");
     Serial.print(pulses);
@@ -193,9 +202,8 @@ namespace manageLaser
   void firePulse() 
   {
     digitalWrite(LASER_PIN, HIGH);
-    delayMicroseconds(pulsePeriod); // hier später anpassen (*1000 nur zum vorzeigen)
+    delayMicroseconds(pulseDuration);
     digitalWrite(LASER_PIN, LOW);
-    delay(100); // Kurze Pause nach dem Puls
   }
   
   void blockingTone(unsigned int frequency, unsigned long duration) 
@@ -207,8 +215,6 @@ namespace manageLaser
   void alarm() 
   {
     Serial.println("🔊 Alarm sound...");
-    blockingTone(500, 500);
-    delay(250);
     blockingTone(500, 500);
     delay(250);
     blockingTone(500, 500);
