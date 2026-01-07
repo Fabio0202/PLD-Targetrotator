@@ -76,15 +76,18 @@ namespace manageLaser
       // Befehl: CMD:LASER_p50f5
       int pIndex = command.indexOf('p');
       int fIndex = command.indexOf('f');
+      float frequency = MAX_LASER_FREQUENCY;
       
       if (pIndex != -1 && fIndex != -1) 
       {
         unsigned long pulses = command.substring(pIndex + 1, fIndex).toInt();
         double frequency = command.substring(fIndex + 1).toFloat();
-        if (frequency > 500.0)
-          {
-          Serial.println("⚠️  Warnung: Frequenz > 500Hz mit 1ms Pulsdauer problematisch!");
-          }
+        if (frequency <= 0 || frequency > MAX_LASER_FREQUENCY || pulses <= 0) 
+        {
+          Serial.println("❌ Ungültige Parameter: Pulse müssen > 0 und Frequenz zwischen 0.1 und " + String(MAX_LASER_FREQUENCY) + " Hz liegen.");
+          return;
+        }
+        
         startLaserSequence(pulses, frequency);
       } 
       else 
@@ -121,10 +124,6 @@ namespace manageLaser
 
   void startLaserSequence(unsigned long pulses, double frequency) 
   {
-    if (pulses <= 0 || frequency <= 0) {
-      Serial.println("❌ Ungültige Parameter: pulses>0 und frequency>0 required");
-      return;
-    }
     if (laserOn) {
       Serial.println("❌ Laser Sequence läuft bereits");
       return;

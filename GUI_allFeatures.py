@@ -9,6 +9,7 @@ import serial.tools.list_ports as list_ports
 
 # ---- Settings ----
 BAUD = 9600
+MAX_LASER_FREQUENCY = 200.0  # Hz
 
 class SerialReader(threading.Thread):
     def __init__(self, ser, outq, stop_event):
@@ -137,7 +138,7 @@ class PLDController(tk.Tk):
         
         ttk.Label(laser_frame, text="Freq (Hz):").grid(row=0, column=2, padx=5, pady=5)
         self.freq_var = tk.DoubleVar(value=1.0)
-        ttk.Entry(laser_frame, width=8, textvariable=self.freq_var).grid(row=0, column=3, padx=2, pady=5)
+        ttk.Spinbox(laser_frame, from_=0.1, to=MAX_LASER_FREQUENCY, increment=0.1, width=8, textvariable=self.freq_var).grid(row=0, column=3, padx=2, pady=5)
         
         ttk.Button(laser_frame, text="Start Laser", command=self.start_laser).grid(row=0, column=4, padx=5, pady=5)
         ttk.Button(laser_frame, text="Stop Laser", command=self.stop_laser_and_experiment).grid(row=0, column=5, padx=2, pady=5)
@@ -399,8 +400,8 @@ class PLDController(tk.Tk):
     def start_laser(self):
         pulses = self.pulses_var.get()
         freq = self.freq_var.get()
-        if pulses <= 0 or freq <= 0:
-            messagebox.showwarning("Invalid", "Pulses and Frequency must be > 0")
+        if pulses <= 0 or freq <= 0 or freq > MAX_LASER_FREQUENCY:
+            messagebox.showwarning("Invalid", "Pulses and Frequency must be > 0 and Frequency must be <= {MAX_LASER_FREQUENCY} Hz")
             return
         if not self.ser or not self.ser.is_open:
             messagebox.showwarning("Not Connected", "Please connect first")
@@ -438,8 +439,8 @@ class PLDController(tk.Tk):
             return
             
         if not self.teach_done:
-            if not messagebox.askyesno("Teach Required", "Teach not done. Start anyway?"):
-                return
+            messagebox.showwarning("Teach Required", "Teach not done."):
+            return
         
         cycles = self.cycles_var.get()
         if cycles <= 0:
@@ -451,8 +452,8 @@ class PLDController(tk.Tk):
             if self.position_shots[i].get() <= 0:
                 messagebox.showwarning("Invalid", f"Shots for position {i+1} must be > 0")
                 return
-            if self.position_frequencies[i].get() <= 0:
-                messagebox.showwarning("Invalid", f"Frequency for position {i+1} must be > 0")
+            if self.position_frequencies[i].get() <= 0 or self.position_frequencies[i].get() > MAX_LASER_FREQUENCY:
+                messagebox.showwarning("Invalid", f"Frequency for position {i+1} must be between 0.1 and {MAX_LASER_FREQUENCY} Hz")
                 return
 
         self.experiment_stop.clear()
